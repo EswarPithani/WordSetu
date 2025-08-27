@@ -1,41 +1,53 @@
-# 📚 WordSetu – Learn a Word a Day
+# 📚 WordSetu – Learn a Word a Day  
 
-WordSetu is a cross-platform **language learning app** built with **React Native** and a **MERN backend**.  
-It helps users learn **Hindi, Telugu, and English** words every day with meanings, translations, pronunciation, and history tracking.
-
----
-
-## ✨ Features
-
-- 🔤 **Daily Word Feed** – Learn a new word each day in Hindi, Telugu, and English  
-- ⭐ **Favorites & History** – Save and review words anytime  
-- 🔔 **Push Notifications** – Daily reminder to learn your word  
-- 🗣️ **Text-to-Speech** – Hear pronunciation in supported languages  
-- 🎨 **Dark/Light Theme** – Auto adapts to system theme  
-- 🌍 **Multi-language Support** – UI and dictionary data  
+![Expo](https://img.shields.io/badge/Expo-SDK%2053-blue?logo=expo&logoColor=white)
+![React Native](https://img.shields.io/badge/React%20Native-0.79.5-61DAFB?logo=react&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-18.x-green?logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express.js-Backend-black?logo=express&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-success?logo=mongodb&logoColor=white)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow?logo=open-source-initiative)
 
 ---
-
-## 🏗️ Tech Stack
-
-**Frontend (client):**
-- React Native (Expo SDK 53)
-- React Navigation
-- AsyncStorage
-- Lottie Animations
-- Expo Notifications & Speech
-
-**Backend (server):**
-- Node.js + Express.js
-- MongoDB + Mongoose
-- JWT Authentication
-- Bcrypt.js for password hashing
-
----
-
-## 📂 Project Structure
 
 ```bash
+📚 WordSetu – Learn a Word a Day
+--------------------------------------------------
+WordSetu is a cross-platform language learning app 
+built with React Native and a MERN backend.
+
+It helps users learn Hindi, Telugu, and English words 
+every day with meanings, translations, pronunciation, 
+and history tracking.
+
+
+✨ Features
+--------------------------------------------------
+🔤  Daily Word Feed – Learn a new word each day in Hindi, Telugu, and English
+⭐  Favorites & History – Save and review words anytime
+🔔  Push Notifications – Daily reminder to learn your word
+🗣️  Text-to-Speech – Hear pronunciation in supported languages
+🎨  Dark/Light Theme – Auto adapts to system theme
+🌍  Multi-language Support – UI and dictionary data
+
+
+🏗️ Tech Stack
+--------------------------------------------------
+Frontend (client):
+  • React Native (Expo SDK 53)
+  • React Navigation
+  • AsyncStorage
+  • Lottie Animations
+  • Expo Notifications & Speech
+
+Backend (server):
+  • Node.js + Express.js
+  • MongoDB + Mongoose
+  • JWT Authentication
+  • Bcrypt.js for password hashing
+
+
+📂 Project Structure
+--------------------------------------------------
 Learn-a-word/
 ├── client/               # React Native (Expo) app
 │   ├── assets/           # App icons, splash, animations
@@ -57,55 +69,51 @@ Learn-a-word/
 
 
 🚀 Getting Started
-1️⃣ Clone the repo
+--------------------------------------------------
+# 1️⃣ Clone the repo
 git clone https://github.com/yourusername/wordsetu.git
 cd wordsetu
 
-2️⃣ Setup Backend (server)
+# 2️⃣ Setup Backend (server)
 cd server
 npm install
 npm run dev   # starts Express server (nodemon)
 
-
-Make sure you set your MongoDB URI in .env file:
-
+# .env file example:
 MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/wordsetu
 JWT_SECRET=your-secret-key
 
-3️⃣ Setup Frontend (client)
+# 3️⃣ Setup Frontend (client)
 cd ../client
 npm install
 npx expo start   # or 'npm run android' / 'npm run ios'
 
-4️⃣ Build App with EAS
+# 4️⃣ Build App with EAS
 cd client
 eas build -p android   # Android build
 eas build -p ios       # iOS build
 
 
 🛠️ Scripts
-
+--------------------------------------------------
 Client:
-
-npm run start      # start Expo dev server
-npm run android    # run app on Android
-npm run ios        # run app on iOS
-npm run web        # run app in browser
-
+  npm run start      # start Expo dev server
+  npm run android    # run app on Android
+  npm run ios        # run app on iOS
+  npm run web        # run app in browser
 
 Server:
+  npm run dev        # start backend in dev mode
+  npm run start      # start backend in production
 
-npm run dev        # start backend in dev mode
-npm run start      # start backend in production
 
 🌟 Future Improvements
-
+--------------------------------------------------
 📖 Word of the Day streak system
-
 📊 User progress tracking dashboard
-
 🤝 Social sharing & leaderboard
 
-📜 License
 
+📜 License
+--------------------------------------------------
 This project is licensed under the MIT License.
