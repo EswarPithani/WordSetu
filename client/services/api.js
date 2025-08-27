@@ -2,7 +2,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
-export const BASE_URL = "http://172.50.10.55:5000"; // ✅ Update if backend IP changes
+export const BASE_URL = "https://wordsetu.onrender.com"; // ✅ Update if backend IP changes
 
 const api = axios.create({
   baseURL: `${BASE_URL}/api`,
