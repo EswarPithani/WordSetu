@@ -8,7 +8,8 @@ import {
     ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
-    ScrollView
+    ScrollView,
+    useColorScheme,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
@@ -19,6 +20,9 @@ function ForgotPasswordScreen({ navigation }) {
     const [newPassword, setNewPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    const scheme = useColorScheme(); // light | dark
+    const isDark = scheme === 'dark';
 
     const handleResetPassword = async () => {
         if (!email || !newPassword) {
@@ -66,25 +70,47 @@ function ForgotPasswordScreen({ navigation }) {
 
     return (
         <KeyboardAvoidingView
-            style={{ flex: 1, backgroundColor: '#fff' }}
+            style={{ flex: 1, backgroundColor: isDark ? '#111827' : '#fff' }}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
             <ScrollView contentContainerStyle={styles.container}>
-                <Text style={styles.title}>Reset Your Password</Text>
+                <Text style={[styles.title, { color: isDark ? '#fff' : '#111827' }]}>
+                    Reset Your Password
+                </Text>
 
                 <TextInput
-                    style={styles.input}
+                    style={[
+                        styles.input,
+                        { 
+                            backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
+                            color: isDark ? '#F9FAFB' : '#1F2937',
+                            borderColor: isDark ? '#374151' : '#ccc'
+                        }
+                    ]}
                     placeholder="Email"
+                    placeholderTextColor={isDark ? '#9CA3AF' : '#6B7280'}
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
                     autoCapitalize="none"
                 />
 
-                <View style={styles.passwordContainer}>
+                <View
+                    style={[
+                        styles.passwordContainer,
+                        { 
+                            backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
+                            borderColor: isDark ? '#374151' : '#ccc'
+                        }
+                    ]}
+                >
                     <TextInput
-                        style={styles.passwordInput}
+                        style={[
+                            styles.passwordInput,
+                            { color: isDark ? '#F9FAFB' : '#1F2937' }
+                        ]}
                         placeholder="New Password"
+                        placeholderTextColor={isDark ? '#9CA3AF' : '#6B7280'}
                         value={newPassword}
                         onChangeText={setNewPassword}
                         secureTextEntry={!showPassword}
@@ -93,13 +119,17 @@ function ForgotPasswordScreen({ navigation }) {
                         <Ionicons
                             name={showPassword ? 'eye' : 'eye-off'}
                             size={24}
-                            color="#4F46E5"
+                            color={isDark ? '#A5B4FC' : '#4F46E5'}
                         />
                     </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity
-                    style={[styles.button, loading && styles.buttonDisabled]}
+                    style={[
+                        styles.button,
+                        loading && styles.buttonDisabled,
+                        { backgroundColor: loading ? '#9CA3AF' : '#4F46E5' }
+                    ]}
                     onPress={handleResetPassword}
                     disabled={loading}
                 >
@@ -128,30 +158,25 @@ const styles = StyleSheet.create({
     },
     input: {
         borderWidth: 1,
-        borderColor: '#ccc',
         padding: 12,
         borderRadius: 8,
         marginBottom: 16,
-        backgroundColor: '#F9FAFB',
+        fontSize: 16,
     },
     passwordContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#ccc',
         borderRadius: 8,
         paddingHorizontal: 12,
         marginBottom: 16,
-        backgroundColor: '#F9FAFB',
     },
     passwordInput: {
         flex: 1,
         paddingVertical: 12,
         fontSize: 16,
-        color: '#1F2937',
     },
     button: {
-        backgroundColor: '#4F46E5',
         padding: 16,
         borderRadius: 12,
         alignItems: 'center',
