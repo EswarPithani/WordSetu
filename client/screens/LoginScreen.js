@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,16 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  ScrollView
+  ScrollView,
+  Animated,
+  Easing,
+  Dimensions
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loginUser } from '../services/api';
 import Toast from 'react-native-toast-message';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 const LoginScreen = ({ setIsLoggedIn, navigation }) => {
   const [email, setEmail] = useState('');
@@ -21,7 +25,62 @@ const LoginScreen = ({ setIsLoggedIn, navigation }) => {
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [focusedField, setFocusedField] = useState(null);
 
+  const { isDarkMode } = useTheme();
+
+  // Animation values
+  const fadeAnim = useState(new Animated.Value(0))[0];
+  const slideAnim = useState(new Animated.Value(30))[0];
+  const scaleAnim = useState(new Animated.Value(0.8))[0];
+  const successScale = useState(new Animated.Value(0))[0];
+  const successOpacity = useState(new Animated.Value(0))[0];
+
+  useEffect(() => {
+    // Entry animations
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        easing: Easing.out(Easing.back(1.2)),
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 700,
+        easing: Easing.out(Easing.elastic(1)),
+        useNativeDriver: true,
+      })
+    ]).start();
+  }, []);
+
+  useEffect(() => {
+    if (showSuccess) {
+      // Success animation
+      Animated.parallel([
+        Animated.timing(successScale, {
+          toValue: 1,
+          duration: 600,
+          easing: Easing.out(Easing.back(1.5)),
+          useNativeDriver: true,
+        }),
+        Animated.timing(successOpacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        })
+      ]).start();
+    } else {
+      // Reset success animation
+      successScale.setValue(0);
+      successOpacity.setValue(0);
+    }
+  }, [showSuccess]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -45,7 +104,7 @@ const LoginScreen = ({ setIsLoggedIn, navigation }) => {
           text2: response.error,
           position: 'bottom',
         });
-        return; // stop further execution
+        return;
       }
 
       await AsyncStorage.setItem('token', response.token);
@@ -79,220 +138,297 @@ const LoginScreen = ({ setIsLoggedIn, navigation }) => {
     }
   };
 
+  // Theme-based styles
+  const backgroundStyle = {
+    backgroundColor: isDarkMode ? '#0F172A' : '#FFFFFF',
+  };
+
+  const textColor = {
+    color: isDarkMode ? '#E2E8F0' : '#1F2937',
+  };
+
+  const subtitleColor = {
+    color: isDarkMode ? '#CBD5E1' : '#6B7280',
+  };
+
+  const inputStyle = {
+    backgroundColor: isDarkMode ? '#334155' : '#F9FAFB',
+    color: isDarkMode ? '#F8FAFC' : '#1F2937',
+    borderColor: focusedField === 'email' ? (isDarkMode ? '#60A5FA' : '#4F46E5') : (isDarkMode ? '#475569' : '#E5E7EB'),
+  };
+
+  const passwordContainerStyle = {
+    backgroundColor: isDarkMode ? '#334155' : '#F9FAFB',
+    borderColor: focusedField === 'password' ? (isDarkMode ? '#60A5FA' : '#4F46E5') : (isDarkMode ? '#475569' : '#E5E7EB'),
+  };
+
+  const dividerLineStyle = {
+    backgroundColor: isDarkMode ? '#374151' : '#E5E7EB',
+  };
+
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, backgroundStyle]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Success Animation with Emoji */}
-        {showSuccess && (
-          <View style={styles.animationContainer}>
-            <Text style={styles.successEmoji}>✅</Text>
-            <Text style={styles.successText}>Success!</Text>
-          </View>
-        )}
-
-        <Text style={styles.title}>🔐 Login</Text>
-        <Text style={styles.subtitle}>Welcome back! Sign in to continue your learning journey</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#999"
-          autoCapitalize="none"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          editable={!loading}
-        />
-
-        <View style={styles.passwordContainer}>
-          <TextInput
-            style={[styles.passinput, { flex: 1 }]}
-            placeholder="Password"
-            placeholderTextColor="#999"
-            secureTextEntry={!showPassword}
-            value={password}
-            onChangeText={setPassword}
-            editable={!loading}
-          />
-
-          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-            <Ionicons
-              name={showPassword ? 'eye' : 'eye-off'}
-              size={24}
-              color="#4F46E5"
-            />
-          </TouchableOpacity>
-        </View>
-
-
-        <TouchableOpacity
-          style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-          onPress={handleLogin}
-          disabled={loading}
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Animated.View
+          style={[
+            styles.content,
+            {
+              opacity: fadeAnim,
+              transform: [
+                { translateY: slideAnim },
+                { scale: scaleAnim }
+              ]
+            }
+          ]}
         >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.loginButtonText}>Login</Text>
+          {/* Success Animation */}
+          {showSuccess && (
+            <Animated.View
+              style={[
+                styles.animationContainer,
+                {
+                  opacity: successOpacity,
+                  transform: [{ scale: successScale }]
+                }
+              ]}
+            >
+              <Text style={styles.successEmoji}>🎉</Text>
+              <Text style={[styles.successText, { color: isDarkMode ? '#10B981' : '#059669' }]}>
+                Success!
+              </Text>
+            </Animated.View>
           )}
-        </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
-          <Text style={{ color: '#4F46E5', marginTop: 16, textAlign: 'center' }}>
-            Forgot Password?
-          </Text>
-        </TouchableOpacity>
+          <View style={styles.header}>
+            <Text style={[styles.title, textColor]}>🔐 Login</Text>
+            <Text style={[styles.subtitle, subtitleColor]}>
+              Welcome back! Sign in to continue your learning journey
+            </Text>
+          </View>
 
+          <View style={styles.form}>
+            <View style={styles.inputContainer}>
+              <Text style={[styles.label, textColor]}>Email</Text>
+              <TextInput
+                style={[styles.input, inputStyle]}
+                placeholder="Enter your email"
+                placeholderTextColor={isDarkMode ? '#94A3B8' : '#9CA3AF'}
+                autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                editable={!loading}
+                onFocus={() => setFocusedField('email')}
+                onBlur={() => setFocusedField(null)}
+              />
+            </View>
 
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>or</Text>
-          <View style={styles.dividerLine} />
-        </View>
+            <View style={styles.inputContainer}>
+              <Text style={[styles.label, textColor]}>Password</Text>
+              <View style={[styles.passwordContainer, passwordContainerStyle]}>
+                <TextInput
+                  style={[styles.passinput, { color: isDarkMode ? '#F8FAFC' : '#1F2937' }]}
+                  placeholder="Enter your password"
+                  placeholderTextColor={isDarkMode ? '#94A3B8' : '#9CA3AF'}
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                  editable={!loading}
+                  onFocus={() => setFocusedField('password')}
+                  onBlur={() => setFocusedField(null)}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  disabled={loading}
+                >
+                  <Ionicons
+                    name={showPassword ? 'eye' : 'eye-off'}
+                    size={24}
+                    color={isDarkMode ? '#60A5FA' : '#4F46E5'}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
 
-        <TouchableOpacity
-          style={styles.signupContainer}
-          onPress={() => navigation.navigate('Signup')}
-          disabled={loading}
-        >
-          <Text style={styles.switchText}>
-            Don't have an account?{' '}
-            <Text style={styles.link}>Sign up</Text>
-          </Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.loginButton,
+                loading && styles.loginButtonDisabled,
+                { backgroundColor: isDarkMode ? '#60A5FA' : '#4F46E5' }
+              ]}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.loginButtonText}>Login</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ForgotPassword')}
+              disabled={loading}
+            >
+              <Text style={[styles.forgotPasswordText, { color: isDarkMode ? '#60A5FA' : '#4F46E5' }]}>
+                Forgot Password?
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.divider}>
+            <View style={[styles.dividerLine, dividerLineStyle]} />
+            <Text style={[styles.dividerText, subtitleColor]}>or</Text>
+            <View style={[styles.dividerLine, dividerLineStyle]} />
+          </View>
+
+          <TouchableOpacity
+            style={styles.signupContainer}
+            onPress={() => navigation.navigate('Signup')}
+            disabled={loading}
+          >
+            <Text style={[styles.switchText, subtitleColor]}>
+              Don't have an account?{' '}
+              <Text style={[styles.link, { color: isDarkMode ? '#60A5FA' : '#4F46E5' }]}>
+                Sign up
+              </Text>
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
+const { width } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
   },
+  content: {
+    width: '100%',
+    alignItems: 'center',
+  },
   animationContainer: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 30,
   },
   successEmoji: {
     fontSize: 64,
-    marginBottom: 10,
+    marginBottom: 12,
   },
   successText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#10B981',
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 40,
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 8,
+    fontWeight: '800',
+    marginBottom: 12,
     textAlign: 'center',
-    color: '#1F2937',
   },
   subtitle: {
     fontSize: 16,
     textAlign: 'center',
-    color: '#6B7280',
-    marginBottom: 30,
     paddingHorizontal: 20,
+    lineHeight: 22,
+  },
+  form: {
+    width: '100%',
+    marginBottom: 30,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#F9FAFB',
-    marginBottom: 16,
+    borderWidth: 2,
     padding: 16,
     borderRadius: 12,
     fontSize: 16,
-    color: '#1F2937',
+    fontWeight: '500',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+  },
+  passinput: {
+    flex: 1,
+    paddingVertical: 16,
+    fontSize: 16,
+    fontWeight: '500',
   },
   loginButton: {
-    backgroundColor: '#4F46E5',
-    padding: 16,
+    padding: 18,
     borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   loginButtonDisabled: {
-    backgroundColor: '#9CA3AF',
+    opacity: 0.7,
   },
   loginButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
-  },
-  forgotPassword: {
-    alignItems: 'center',
-    marginBottom: 24,
+    fontWeight: '700',
   },
   forgotPasswordText: {
-    color: '#4F46E5',
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
+    textAlign: 'center',
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 24,
+    width: '100%',
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#E5E7EB',
   },
   dividerText: {
     marginHorizontal: 16,
-    color: '#6B7280',
     fontSize: 14,
+    fontWeight: '500',
   },
   signupContainer: {
     alignItems: 'center',
   },
   switchText: {
-    color: '#6B7280',
     fontSize: 14,
   },
   link: {
-    color: '#4F46E5',
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-  },
-
-  passinput: {
-    flex: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-    fontSize: 16,
-    color: '#1F2937',
-  },
-
-
 });
 
 export default LoginScreen;

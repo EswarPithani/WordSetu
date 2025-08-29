@@ -3,6 +3,8 @@
     "name": "WordSetu",
     "slug": "wordsetu",
     "version": "1.0.0",
+    "owner": "eswarpithani",
+    "sdkVersion": "53.0.20",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -17,17 +19,22 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/splash-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.learnawordapp"
+      "package": "com.anonymous.wordsetu"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-localization"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "0a4ba69e-b315-49aa-b932-e0f4eecb6ddc"
+      }
+    }
   }
 }

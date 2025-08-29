@@ -206,7 +206,7 @@ const AboutScreen = () => {
         </View>
         <View style={styles.infoRow}>
           <Text style={[styles.infoLabel, { color: isDarkMode ? '#bbb' : '#666' }]}>Last Updated:</Text>
-          <Text style={[styles.infoValue, { color: isDarkMode ? '#fff' : '#333' }]}>December 2023</Text>
+          <Text style={[styles.infoValue, { color: isDarkMode ? '#fff' : '#333' }]}>August 2025</Text>
         </View>
       </View>
 

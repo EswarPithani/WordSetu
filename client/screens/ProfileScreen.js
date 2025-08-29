@@ -335,7 +335,7 @@ function ProfileScreen({ navigation, setIsLoggedIn }) {
             {/* App Info */}
             <View style={[styles.infoCard, { backgroundColor: isDarkMode ? '#1E1E1E' : '#fff' }]}>
                 <Text style={[styles.infoText, { color: isDarkMode ? '#ccc' : '#666' }]}>
-                    Learn A Word • v1.0.0
+                    WordSetu • v1.0.0
                 </Text>
                 <Text style={[styles.infoText, { color: isDarkMode ? '#ccc' : '#666' }]}>
                     Keep learning every day! 📚

@@ -2,7 +2,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
-export const BASE_URL = "http://172.50.10.55:5000"; // ✅ Update if backend IP changes
+export const BASE_URL = "https://wordsetu.onrender.com";
+// ✅ Update if backend IP changes
 
 const api = axios.create({
   baseURL: `${BASE_URL}/api`,
@@ -177,34 +178,46 @@ export const signupUser = async (name, email, password) => {
   }
 };
 
-export const loginUser = async (email, password) => {
+// Backend: /api/auth/login
+exports.login = async (req, res) => {
   try {
-    const res = await axios.post(`${BASE_URL}/api/auth/login`, { email, password }, {
-      headers: { "Content-Type": "application/json" },
-      timeout: 15000,
+    const { email, password } = req.body;
+
+    // 1. Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+
+    // 2. Compare passwords using bcrypt (THIS IS CRUCIAL!)
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+
+    // 3. Generate token and login
+    const token = generateToken(user);
+    res.json({
+      success: true,
+      message: 'Login successful',
+      token,
+      user: { id: user._id, email: user.email, name: user.name }
     });
 
-    if (res.data.token) await AsyncStorage.setItem('token', res.data.token);
-    return res.data;
   } catch (error) {
-    logError("Login error", error);
-    return { error: error.response?.data?.message || "Login failed" };
+    console.error('Login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
   }
 };
-
-export const resetPassword = async (email, newPassword) => {
-  try {
-    const response = await axios.post(
-      `${BASE_URL}/api/auth/reset-password`,
-      { email, newPassword },
-      { headers: { "Content-Type": "application/json" }, timeout: 15000 }
-    );
-    return response.data;
-  } catch (error) {
-    return { success: false, message: error.response?.data?.message || error.message };
-  }
-};
-
 
 // ---------------------------------------------
 // ✅ Debug & Admin

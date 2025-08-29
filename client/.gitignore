@@ -42,3 +42,4 @@ node_modules/
 .env
 android/
 ios/
+node_modules

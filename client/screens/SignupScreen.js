@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -8,12 +8,16 @@ import {
     ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
-    ScrollView
+    ScrollView,
+    Animated,
+    Easing,
+    Dimensions
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';  // 👈 Add this
+import { Ionicons } from '@expo/vector-icons';
 import { signupUser } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
+import { useTheme } from '../context/ThemeContext';
 
 function SignupScreen({ navigation, setIsLoggedIn }) {
     const [name, setName] = useState('');
@@ -22,17 +26,71 @@ function SignupScreen({ navigation, setIsLoggedIn }) {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
-
-    // 👇 New states for visibility
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [focusedField, setFocusedField] = useState(null);
+
+    const { isDarkMode } = useTheme();
+
+    // Animation values
+    const fadeAnim = useState(new Animated.Value(0))[0];
+    const slideAnim = useState(new Animated.Value(40))[0];
+    const scaleAnim = useState(new Animated.Value(0.9))[0];
+    const successScale = useState(new Animated.Value(0))[0];
+    const successOpacity = useState(new Animated.Value(0))[0];
+
+    useEffect(() => {
+        // Entry animations
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 800,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: 0,
+                duration: 700,
+                easing: Easing.out(Easing.back(1.2)),
+                useNativeDriver: true,
+            }),
+            Animated.timing(scaleAnim, {
+                toValue: 1,
+                duration: 800,
+                easing: Easing.out(Easing.elastic(1)),
+                useNativeDriver: true,
+            })
+        ]).start();
+    }, []);
+
+    useEffect(() => {
+        if (showSuccess) {
+            // Success animation
+            Animated.parallel([
+                Animated.timing(successScale, {
+                    toValue: 1,
+                    duration: 700,
+                    easing: Easing.out(Easing.back(1.8)),
+                    useNativeDriver: true,
+                }),
+                Animated.timing(successOpacity, {
+                    toValue: 1,
+                    duration: 500,
+                    useNativeDriver: true,
+                })
+            ]).start();
+        } else {
+            // Reset success animation
+            successScale.setValue(0);
+            successOpacity.setValue(0);
+        }
+    }, [showSuccess]);
 
     const validateForm = () => {
         if (!name || !email || !password || !confirmPassword) {
             Toast.show({
                 type: 'error',
                 text1: 'Missing Information',
-                text2: 'Please fill in all fields',
+                text2: 'Please complete all required fields',
                 position: 'bottom',
             });
             return false;
@@ -42,7 +100,7 @@ function SignupScreen({ navigation, setIsLoggedIn }) {
             Toast.show({
                 type: 'error',
                 text1: 'Password Mismatch',
-                text2: 'Passwords do not match',
+                text2: 'Your passwords do not match. Please verify and try again.',
                 position: 'bottom',
             });
             return false;
@@ -51,8 +109,8 @@ function SignupScreen({ navigation, setIsLoggedIn }) {
         if (password.length < 6) {
             Toast.show({
                 type: 'error',
-                text1: 'Weak Password',
-                text2: 'Password must be at least 6 characters',
+                text1: 'Password Strength',
+                text2: 'Password must contain at least 6 characters for security',
                 position: 'bottom',
             });
             return false;
@@ -62,8 +120,8 @@ function SignupScreen({ navigation, setIsLoggedIn }) {
         if (!emailRegex.test(email)) {
             Toast.show({
                 type: 'error',
-                text1: 'Invalid Email',
-                text2: 'Please enter a valid email address',
+                text1: 'Invalid Email Format',
+                text2: 'Please enter a valid email address (e.g., name@example.com)',
                 position: 'bottom',
             });
             return false;
@@ -80,7 +138,7 @@ function SignupScreen({ navigation, setIsLoggedIn }) {
             const result = await signupUser(name, email, password);
 
             if (result.error) {
-                throw new Error(result.error || result.message || 'Signup failed');
+                throw new Error(result.error || result.message || 'Registration unsuccessful. Please try again.');
             }
 
             if (result.token) {
@@ -91,13 +149,12 @@ function SignupScreen({ navigation, setIsLoggedIn }) {
 
                 Toast.show({
                     type: 'success',
-                    text1: 'Welcome to Learn-A-Word! 🎉',
-                    text2: 'Your account has been created successfully',
+                    text1: 'Welcome to Learn-A-Word! 🎓',
+                    text2: 'Your account has been successfully created and you are now logged in.',
                     position: 'bottom',
-                    visibilityTime: 2500,
+                    visibilityTime: 3000,
                 });
 
-                // Show animation and then navigate or login
                 setTimeout(() => {
                     setShowSuccess(false);
                     if (setIsLoggedIn) {
@@ -108,15 +165,15 @@ function SignupScreen({ navigation, setIsLoggedIn }) {
                             email: email
                         });
                     }
-                }, 2000);
+                }, 2500);
             } else {
-                throw new Error('No token received from server');
+                throw new Error('Authentication token not received. Please try logging in.');
             }
         } catch (error) {
             Toast.show({
                 type: 'error',
-                text1: 'Signup Failed',
-                text2: error.message || 'Something went wrong. Please try again.',
+                text1: 'Registration Failed',
+                text2: error.message || 'Unable to complete registration. Please check your connection and try again.',
                 position: 'bottom',
             });
         } finally {
@@ -124,232 +181,332 @@ function SignupScreen({ navigation, setIsLoggedIn }) {
         }
     };
 
+    // Theme-based styles
+    const backgroundStyle = {
+        backgroundColor: isDarkMode ? '#0F172A' : '#FFFFFF',
+    };
+
+    const textColor = {
+        color: isDarkMode ? '#E2E8F0' : '#1F2937',
+    };
+
+    const subtitleColor = {
+        color: isDarkMode ? '#CBD5E1' : '#6B7280',
+    };
+
+    const inputStyle = {
+        backgroundColor: isDarkMode ? '#334155' : '#F9FAFB',
+        color: isDarkMode ? '#F8FAFC' : '#1F2937',
+        borderColor: focusedField ? (isDarkMode ? '#60A5FA' : '#10B981') : (isDarkMode ? '#475569' : '#E5E7EB'),
+    };
+
+    const passwordContainerStyle = {
+        backgroundColor: isDarkMode ? '#334155' : '#F9FAFB',
+        borderColor: focusedField ? (isDarkMode ? '#60A5FA' : '#10B981') : (isDarkMode ? '#475569' : '#E5E7EB'),
+    };
+
+    const dividerLineStyle = {
+        backgroundColor: isDarkMode ? '#374151' : '#E5E7EB',
+    };
+
     return (
         <KeyboardAvoidingView
-            style={styles.container}
+            style={[styles.container, backgroundStyle]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-                {/* Success Animation with Emoji */}
-                {showSuccess && (
-                    <View style={styles.animationContainer}>
-                        <Text style={styles.successEmoji}>🎓✨🎉</Text>
-                        <Text style={styles.successText}>Account Created!</Text>
-                    </View>
-                )}
-
-                <Text style={styles.title}>🚀 Create Account</Text>
-                <Text style={styles.subtitle}>Join us and start learning new words every day!</Text>
-
-                <TextInput
-                    placeholder="Full Name"
-                    placeholderTextColor="#999"
-                    style={styles.input}
-                    value={name}
-                    onChangeText={setName}
-                    editable={!loading}
-                />
-
-                <TextInput
-                    placeholder="Email Address"
-                    placeholderTextColor="#999"
-                    style={styles.input}
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    editable={!loading}
-                />
-
-                {/* Password with eye toggle 👁️ */}
-                <View style={styles.passwordContainer}>
-                    <TextInput
-                        placeholder="Password (min. 6 characters)"
-                        placeholderTextColor="#999"
-                        secureTextEntry={!showPassword}
-                        style={[styles.input, { flex: 1, marginBottom: 0 }]}
-                        value={password}
-                        onChangeText={setPassword}
-                        editable={!loading}
-                    />
-                    <TouchableOpacity
-                        onPress={() => setShowPassword(!showPassword)}
-                        style={styles.eyeIcon}
-                    >
-                        <Ionicons
-                            name={showPassword ? 'eye-off' : 'eye'}
-                            size={22}
-                            color="#6B7280"
-                        />
-                    </TouchableOpacity>
-                </View>
-                <View style={{ height: 16 }} />
-
-                {/* Confirm Password with eye toggle 👁️ */}
-                <View style={styles.passwordContainer}>
-                    <TextInput
-                        placeholder="Confirm Password"
-                        placeholderTextColor="#999"
-                        secureTextEntry={!showConfirmPassword}
-                        style={[styles.input, { flex: 1, marginBottom: 0 }]}
-                        value={confirmPassword}
-                        onChangeText={setConfirmPassword}
-                        editable={!loading}
-                    />
-                    <TouchableOpacity
-                        onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                        style={styles.eyeIcon}
-                    >
-                        <Ionicons
-                            name={showConfirmPassword ? 'eye-off' : 'eye'}
-                            size={22}
-                            color="#6B7280"
-                        />
-                    </TouchableOpacity>
-                </View>
-                <View style={{ height: 24 }} />
-
-                <TouchableOpacity
-                    style={[styles.signupButton, loading && styles.signupButtonDisabled]}
-                    onPress={handleSignup}
-                    disabled={loading}
+            <ScrollView
+                contentContainerStyle={styles.scrollContainer}
+                keyboardShouldPersistTaps="handled"
+            >
+                <Animated.View
+                    style={[
+                        styles.content,
+                        {
+                            opacity: fadeAnim,
+                            transform: [
+                                { translateY: slideAnim },
+                                { scale: scaleAnim }
+                            ]
+                        }
+                    ]}
                 >
-                    {loading ? (
-                        <ActivityIndicator color="#fff" />
-                    ) : (
-                        <Text style={styles.signupButtonText}>Create Account</Text>
+                    {/* Success Animation */}
+                    {showSuccess && (
+                        <Animated.View
+                            style={[
+                                styles.animationContainer,
+                                {
+                                    opacity: successOpacity,
+                                    transform: [{ scale: successScale }]
+                                }
+                            ]}
+                        >
+                            <Text style={styles.successEmoji}>🎓✨</Text>
+                            <Text style={[styles.successText, { color: isDarkMode ? '#34D399' : '#10B981' }]}>
+                                Account Created!
+                            </Text>
+                        </Animated.View>
                     )}
-                </TouchableOpacity>
 
-                <View style={styles.divider}>
-                    <View style={styles.dividerLine} />
-                    <Text style={styles.dividerText}>Already have an account?</Text>
-                    <View style={styles.dividerLine} />
-                </View>
+                    <View style={styles.header}>
+                        <Text style={[styles.title, textColor]}>🚀 Create Account</Text>
+                        <Text style={[styles.subtitle, subtitleColor]}>
+                            Join our learning community and expand your vocabulary every day
+                        </Text>
+                    </View>
 
-                <TouchableOpacity
-                    style={styles.loginContainer}
-                    onPress={() => navigation.navigate('Login')}
-                    disabled={loading}
-                >
-                    <Text style={styles.switchText}>
-                        Sign in to your account{' '}
-                        <Text style={styles.link}>Login</Text>
-                    </Text>
-                </TouchableOpacity>
+                    <View style={styles.form}>
+                        <View style={styles.inputContainer}>
+                            <Text style={[styles.label, textColor]}>Full Name</Text>
+                            <TextInput
+                                style={[styles.input, inputStyle]}
+                                placeholder="Enter your full name"
+                                placeholderTextColor={isDarkMode ? '#94A3B8' : '#9CA3AF'}
+                                value={name}
+                                onChangeText={setName}
+                                editable={!loading}
+                                onFocus={() => setFocusedField('name')}
+                                onBlur={() => setFocusedField(null)}
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={[styles.label, textColor]}>Email Address</Text>
+                            <TextInput
+                                style={[styles.input, inputStyle]}
+                                placeholder="Enter your email address"
+                                placeholderTextColor={isDarkMode ? '#94A3B8' : '#9CA3AF'}
+                                value={email}
+                                onChangeText={setEmail}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                                editable={!loading}
+                                onFocus={() => setFocusedField('email')}
+                                onBlur={() => setFocusedField(null)}
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={[styles.label, textColor]}>Password</Text>
+                            <View style={[styles.passwordContainer, passwordContainerStyle]}>
+                                <TextInput
+                                    style={[styles.passinput, { color: isDarkMode ? '#F8FAFC' : '#1F2937' }]}
+                                    placeholder="Create a secure password (min. 6 characters)"
+                                    placeholderTextColor={isDarkMode ? '#94A3B8' : '#9CA3AF'}
+                                    secureTextEntry={!showPassword}
+                                    value={password}
+                                    onChangeText={setPassword}
+                                    editable={!loading}
+                                    onFocus={() => setFocusedField('password')}
+                                    onBlur={() => setFocusedField(null)}
+                                />
+                                <TouchableOpacity
+                                    onPress={() => setShowPassword(!showPassword)}
+                                    style={styles.eyeIcon}
+                                    disabled={loading}
+                                >
+                                    <Ionicons
+                                        name={showPassword ? 'eye-off' : 'eye'}
+                                        size={22}
+                                        color={isDarkMode ? '#60A5FA' : '#6B7280'}
+                                    />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={[styles.label, textColor]}>Confirm Password</Text>
+                            <View style={[styles.passwordContainer, passwordContainerStyle]}>
+                                <TextInput
+                                    style={[styles.passinput, { color: isDarkMode ? '#F8FAFC' : '#1F2937' }]}
+                                    placeholder="Re-enter your password for verification"
+                                    placeholderTextColor={isDarkMode ? '#94A3B8' : '#9CA3AF'}
+                                    secureTextEntry={!showConfirmPassword}
+                                    value={confirmPassword}
+                                    onChangeText={setConfirmPassword}
+                                    editable={!loading}
+                                    onFocus={() => setFocusedField('confirmPassword')}
+                                    onBlur={() => setFocusedField(null)}
+                                />
+                                <TouchableOpacity
+                                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    style={styles.eyeIcon}
+                                    disabled={loading}
+                                >
+                                    <Ionicons
+                                        name={showConfirmPassword ? 'eye-off' : 'eye'}
+                                        size={22}
+                                        color={isDarkMode ? '#60A5FA' : '#6B7280'}
+                                    />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                        <TouchableOpacity
+                            style={[
+                                styles.signupButton,
+                                loading && styles.signupButtonDisabled,
+                                { backgroundColor: isDarkMode ? '#34D399' : '#10B981' }
+                            ]}
+                            onPress={handleSignup}
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <Text style={styles.signupButtonText}>Create Account</Text>
+                            )}
+                        </TouchableOpacity>
+
+                        <View style={styles.divider}>
+                            <View style={[styles.dividerLine, dividerLineStyle]} />
+                            <Text style={[styles.dividerText, subtitleColor]}>Already registered?</Text>
+                            <View style={[styles.dividerLine, dividerLineStyle]} />
+                        </View>
+
+                        <TouchableOpacity
+                            style={styles.loginContainer}
+                            onPress={() => navigation.navigate('Login')}
+                            disabled={loading}
+                        >
+                            <Text style={[styles.switchText, subtitleColor]}>
+                                Access your existing account{' '}
+                                <Text style={[styles.link, { color: isDarkMode ? '#34D399' : '#10B981' }]}>
+                                    Sign In
+                                </Text>
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </Animated.View>
             </ScrollView>
         </KeyboardAvoidingView>
     );
 }
 
+const { width } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
     },
     scrollContainer: {
         flexGrow: 1,
         justifyContent: 'center',
-        padding: 20,
+        padding: 24,
+    },
+    content: {
+        width: '100%',
+        alignItems: 'center',
     },
     animationContainer: {
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: 32,
     },
     successEmoji: {
-        fontSize: 64,
-        marginBottom: 10,
+        fontSize: 56,
+        marginBottom: 12,
     },
     successText: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#10B981',
+        fontSize: 20,
+        fontWeight: '700',
+    },
+    header: {
+        alignItems: 'center',
+        marginBottom: 40,
     },
     title: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        marginBottom: 8,
+        fontSize: 28,
+        fontWeight: '800',
+        marginBottom: 12,
         textAlign: 'center',
-        color: '#1F2937',
+        letterSpacing: -0.5,
     },
     subtitle: {
         fontSize: 16,
         textAlign: 'center',
-        color: '#6B7280',
-        marginBottom: 30,
+        lineHeight: 22,
         paddingHorizontal: 20,
     },
+    form: {
+        width: '100%',
+        marginBottom: 24,
+    },
+    inputContainer: {
+        marginBottom: 20,
+    },
+    label: {
+        fontSize: 15,
+        fontWeight: '600',
+        marginBottom: 8,
+        letterSpacing: -0.2,
+    },
     input: {
-        borderWidth: 1,
-        borderColor: '#E5E7EB',
-        backgroundColor: '#F9FAFB',
-        marginBottom: 16,
+        borderWidth: 2,
         padding: 16,
         borderRadius: 12,
         fontSize: 16,
-        color: '#1F2937',
+        fontWeight: '500',
     },
     passwordContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#E5E7EB',
-        backgroundColor: '#F9FAFB',
+        borderWidth: 2,
         borderRadius: 12,
-        paddingRight: 12,
+        paddingHorizontal: 16,
+    },
+    passinput: {
+        flex: 1,
+        paddingVertical: 16,
+        fontSize: 16,
+        fontWeight: '500',
     },
     eyeIcon: {
-        padding: 8,
+        padding: 4,
     },
     signupButton: {
-        backgroundColor: '#10B981',
-        padding: 16,
+        padding: 18,
         borderRadius: 12,
         alignItems: 'center',
         marginBottom: 24,
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-        elevation: 3,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 5,
     },
     signupButtonDisabled: {
-        backgroundColor: '#9CA3AF',
+        opacity: 0.7,
     },
     signupButtonText: {
         color: '#fff',
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: '700',
+        letterSpacing: 0.5,
     },
     divider: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 20,
+        width: '100%',
     },
     dividerLine: {
         flex: 1,
         height: 1,
-        backgroundColor: '#E5E7EB',
     },
     dividerText: {
         marginHorizontal: 16,
-        color: '#6B7280',
         fontSize: 14,
+        fontWeight: '500',
     },
     loginContainer: {
         alignItems: 'center',
     },
     switchText: {
-        color: '#6B7280',
         fontSize: 14,
         textAlign: 'center',
     },
     link: {
-        color: '#10B981',
-        fontWeight: '600',
+        fontWeight: '700',
     },
 });
 
