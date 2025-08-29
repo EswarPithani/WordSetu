@@ -9,9 +9,13 @@ import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
+<<<<<<< HEAD
     Animated,
     Easing,
     Dimensions
+=======
+    useColorScheme,
+>>>>>>> 9842a067161a26190903dcecfa099f135bf1c344
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
@@ -46,6 +50,9 @@ function ForgotPasswordScreen({ navigation }) {
             })
         ]).start();
     }, []);
+
+    const scheme = useColorScheme(); // light | dark
+    const isDark = scheme === 'dark';
 
     const handleResetPassword = async () => {
         // Validation
@@ -160,6 +167,7 @@ function ForgotPasswordScreen({ navigation }) {
 
     return (
         <KeyboardAvoidingView
+<<<<<<< HEAD
             style={[styles.container, backgroundStyle]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
@@ -175,6 +183,70 @@ function ForgotPasswordScreen({ navigation }) {
                             transform: [{ translateY: slideAnim }]
                         }
                     ]}
+=======
+            style={{ flex: 1, backgroundColor: isDark ? '#111827' : '#fff' }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+            <ScrollView contentContainerStyle={styles.container}>
+                <Text style={[styles.title, { color: isDark ? '#fff' : '#111827' }]}>
+                    Reset Your Password
+                </Text>
+
+                <TextInput
+                    style={[
+                        styles.input,
+                        { 
+                            backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
+                            color: isDark ? '#F9FAFB' : '#1F2937',
+                            borderColor: isDark ? '#374151' : '#ccc'
+                        }
+                    ]}
+                    placeholder="Email"
+                    placeholderTextColor={isDark ? '#9CA3AF' : '#6B7280'}
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                />
+
+                <View
+                    style={[
+                        styles.passwordContainer,
+                        { 
+                            backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
+                            borderColor: isDark ? '#374151' : '#ccc'
+                        }
+                    ]}
+                >
+                    <TextInput
+                        style={[
+                            styles.passwordInput,
+                            { color: isDark ? '#F9FAFB' : '#1F2937' }
+                        ]}
+                        placeholder="New Password"
+                        placeholderTextColor={isDark ? '#9CA3AF' : '#6B7280'}
+                        value={newPassword}
+                        onChangeText={setNewPassword}
+                        secureTextEntry={!showPassword}
+                    />
+                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                        <Ionicons
+                            name={showPassword ? 'eye' : 'eye-off'}
+                            size={24}
+                            color={isDark ? '#A5B4FC' : '#4F46E5'}
+                        />
+                    </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity
+                    style={[
+                        styles.button,
+                        loading && styles.buttonDisabled,
+                        { backgroundColor: loading ? '#9CA3AF' : '#4F46E5' }
+                    ]}
+                    onPress={handleResetPassword}
+                    disabled={loading}
+>>>>>>> 9842a067161a26190903dcecfa099f135bf1c344
                 >
                     <View style={[styles.card, cardStyle]}>
                         <View style={styles.iconContainer}>
@@ -352,23 +424,39 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     input: {
+<<<<<<< HEAD
         borderWidth: 2,
         padding: 16,
         borderRadius: 12,
         fontSize: 16,
         fontWeight: '500',
+=======
+        borderWidth: 1,
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 16,
+        fontSize: 16,
+>>>>>>> 9842a067161a26190903dcecfa099f135bf1c344
     },
     passwordContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+<<<<<<< HEAD
         borderWidth: 2,
         borderRadius: 12,
         paddingHorizontal: 16,
+=======
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        marginBottom: 16,
+>>>>>>> 9842a067161a26190903dcecfa099f135bf1c344
     },
     passwordInput: {
         flex: 1,
         paddingVertical: 16,
         fontSize: 16,
+<<<<<<< HEAD
         fontWeight: '500',
     },
     eyeIcon: {
@@ -376,6 +464,11 @@ const styles = StyleSheet.create({
     },
     button: {
         padding: 18,
+=======
+    },
+    button: {
+        padding: 16,
+>>>>>>> 9842a067161a26190903dcecfa099f135bf1c344
         borderRadius: 12,
         alignItems: 'center',
         marginTop: 8,
